@@ -1,0 +1,142 @@
+[
+  {
+    "name": "BAIDUID_BFESS",
+    "value": "50CDC51142E6C7325C2002F4DF1666AC:FG=1",
+    "domain": ".baidu.com",
+    "path": "/",
+    "expires": 1812968459.531958,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "HMACCOUNT_BFESS",
+    "value": "D2D949404F99B7BF",
+    "domain": ".hm.baidu.com",
+    "path": "/",
+    "expires": 1815992459.555945,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_ga",
+    "value": "GA1.1.21082475.1781432460",
+    "domain": ".menglar.com",
+    "path": "/",
+    "expires": 1815992572.609468,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_gcl_au",
+    "value": "1.1.248205616.1781432469",
+    "domain": ".menglar.com",
+    "path": "/",
+    "expires": 1789208469,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "MDSUID",
+    "value": "EFBC1EBG162D66B6DAB6C0F801GC91G7",
+    "domain": "hmlog.menglar.com",
+    "path": "/",
+    "expires": 1815992469.099138,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "id",
+    "value": "229c7d20b80b0110||t=1781432469|et=730|cs=002213fd483e11606548025ad9",
+    "domain": ".doubleclick.net",
+    "path": "/",
+    "expires": 1815992499.919781,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "AGL_USER_ID",
+    "value": "d69ff324-6fa1-4bf7-ae4f-e63355af9d9a",
+    "domain": ".shopee.menglar.com",
+    "path": "/",
+    "expires": 1815992500.132361,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "curIp",
+    "value": "101.126.17.35",
+    "domain": "shopee.menglar.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "Hm_lvt_fd99679ef03cdaa9949226433ec33bb2",
+    "value": "1781432568",
+    "domain": ".shopee.menglar.com",
+    "path": "/",
+    "expires": 1812968567,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "Hm_lpvt_fd99679ef03cdaa9949226433ec33bb2",
+    "value": "1781432568",
+    "domain": ".shopee.menglar.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "HMACCOUNT",
+    "value": "D2D949404F99B7BF",
+    "domain": ".shopee.menglar.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "i18n_redirected",
+    "value": "zh",
+    "domain": "shopee.menglar.com",
+    "path": "/",
+    "expires": 1812968568,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "language",
+    "value": "zh",
+    "domain": "shopee.menglar.com",
+    "path": "/",
+    "expires": 1812968568,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ga_9YZD96TG4S",
+    "value": "GS2.1.s1781432459$o1$g1$t1781432572$j60$l0$h0",
+    "domain": ".menglar.com",
+    "path": "/",
+    "expires": 1815992572.609157,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "task": "collect",
+  "start_time": "2026-06-14T10:09:00.647849",
+  "config": {
+    "sites": [
+      "MY"
+    ],
+    "product_lines": [
+      "OP"
+    ],
+    "keywords": "from_config",
+    "headless": false
+  },
+  "status": "completed",
+  "downloads": [],
+  "tasks": [],
+  "total_exports": 0,
+  "errors": [],
+  "error": "BrowserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n╔════════════════════════════════════════════════════════════════════════════════════════════════╗\n║ Looks like you launched a headed browser without having a XServer running.                     ║\n║ Set either 'headless: true' or use 'xvfb-run <your-playwright-app>' before running Playwright. ║\n║                                                                                                ║\n║ <3 Playwright Team                                                                             ║\n╚════════════════════════════════════════════════════════════════════════════════════════════════╝\nCall log:\n  - <launching> /root/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --no-sandbox --disable-blink-features=AutomationControlled --disable-dev-shm-usage --user-data-dir=/tmp/playwright_chromiumdev_profile-xk0rCB --remote-debugging-pipe --no-startup-window\n  - <launched> pid=15726\n  - [pid=15726][err] [15726:15741:0614/100901.242101:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory\n  - [pid=15726][err] [15726:15726:0614/100901.244730:ERROR:ui/ozone/platform/x11/ozone_platform_x11.cc:257] Missing X server or $DISPLAY\n  - [pid=15726][err] [15726:15726:0614/100901.244741:ERROR:ui/aura/env.cc:246] The platform failed to initialize.  Exiting.\n  - [pid=15726] <gracefully close start>\n  - [pid=15726] <kill>\n  - [pid=15726] <will force kill>\n  - [pid=15726] <process did exit: exitCode=1, signal=null>\n  - [pid=15726] starting temporary directories cleanup\n  - [pid=15726] finished temporary directories cleanup\n  - [pid=15726] <gracefully close end>\n"
+}
