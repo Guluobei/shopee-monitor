@@ -2,6 +2,7 @@
 """
 知虾竞品数据采集脚本
 使用Playwright自动化采集Shopee竞品数据
+集成 webapp-testing skill 最佳实践优化登录流程
 """
 
 import os
@@ -12,10 +13,17 @@ import time
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
 from playwright.sync_api import TimeoutError as PlaywrightTimeout
+
+# 导入优化的登录管理器
+try:
+    from zhixia_login import ZhixiaLoginManager
+    LOGIN_MANAGER_AVAILABLE = True
+except ImportError:
+    LOGIN_MANAGER_AVAILABLE = False
 
 # 配置日志
 logging.basicConfig(
@@ -26,10 +34,16 @@ logger = logging.getLogger(__name__)
 
 
 class ZhixiaScraper:
-    """知虾竞品数据采集器"""
+    """知虾竞品数据采集器 - 集成优化的登录管理"""
 
-    def __init__(self, config_path: str = None):
-        """初始化采集器"""
+    def __init__(self, config_path: str = None, use_login_manager: bool = True):
+        """
+        初始化采集器
+        
+        Args:
+            config_path: 配置文件路径
+            use_login_manager: 是否使用优化的登录管理器
+        """
         if config_path is None:
             config_path = os.path.join(
                 os.path.dirname(__file__),
@@ -40,8 +54,23 @@ class ZhixiaScraper:
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
+        self.playwright = None
+        
+        # 是否使用优化的登录管理器
+        self.use_login_manager = use_login_manager and LOGIN_MANAGER_AVAILABLE
+        
+        if self.use_login_manager:
+            logger.info("使用优化的登录管理器")
+            self.login_manager = ZhixiaLoginManager(
+                config=self.config,
+                cookie_file=os.path.join(os.path.dirname(__file__), '..', 'data', 'cookies.json'),
+                screenshot_dir=os.path.join(os.path.dirname(__file__), '..', 'data', 'login_screenshots')
+            )
+        else:
+            logger.info("使用传统登录方式")
+            self.login_manager = None
 
-        # Cookie保存路径
+        # Cookie保存路径（传统方式备用）
         self.cookie_file = os.path.join(
             os.path.dirname(__file__),
             '..', 'data', 'cookies.json'
@@ -154,12 +183,41 @@ class ZhixiaScraper:
         return False
 
     def launch_browser(self, headless: bool = None) -> bool:
-        """启动浏览器，返回是否成功登录"""
-        logger.info("正在启动浏览器...")
-        self.playwright = sync_playwright().start()
-
+        """
+        启动浏览器，返回是否成功登录
+        
+        使用 webapp-testing skill 最佳实践：
+        - 等待 networkidle 状态
+        - 智能登录检测
+        - 截图调试支持
+        - 登录成功后保持浏览器打开
+        """
         if headless is None:
             headless = self.config['browser'].get('headless', False)
+        
+        # 使用优化的登录管理器
+        if self.use_login_manager and self.login_manager:
+            logger.info("使用优化的登录管理器启动浏览器...")
+            success, status = self.login_manager.ensure_login(
+                force_visible=not headless,
+                auto_login_timeout=180
+            )
+            
+            if success:
+                # 从登录管理器获取浏览器对象
+                self.browser = self.login_manager.get_browser()
+                self.context = self.login_manager.get_context()
+                self.page = self.login_manager.get_page()
+                self.playwright = self.login_manager.playwright
+                logger.info(f"登录成功: {status}")
+                return True
+            
+            logger.warning(f"登录失败: {status}")
+            return False
+        
+        # 传统登录方式（备用）
+        logger.info("使用传统方式启动浏览器...")
+        self.playwright = sync_playwright().start()
 
         self.browser = self.playwright.chromium.launch(
             headless=headless,
@@ -200,6 +258,16 @@ class ZhixiaScraper:
 
     def close_browser(self) -> None:
         """关闭浏览器"""
+        # 如果使用登录管理器，通过登录管理器关闭
+        if self.use_login_manager and self.login_manager:
+            self.login_manager.close_browser()
+            self.browser = None
+            self.context = None
+            self.page = None
+            self.playwright = None
+            return
+        
+        # 传统方式关闭
         # 先保存cookies
         if self.context:
             self.save_cookies()
@@ -599,28 +667,15 @@ class ZhixiaScraper:
             product_lines = list(self.config['product_lines'].keys())
 
         try:
-            # 启动浏览器
+            # 启动浏览器并登录（login_manager 内部处理完整流程）
             logged_in = self.launch_browser()
 
             if not logged_in:
-                logger.info("尝试以可见模式启动浏览器以进行登录...")
-                # 先关闭
-                self.close_browser()
-                time.sleep(2)
+                logger.error("登录失败，无法继续采集")
+                results['status'] = 'login_failed'
+                return results
 
-                # 以非headless模式重新启动
-                self.launch_browser(headless=False)
-
-                # 等待用户手动登录
-                if not self.wait_for_manual_login(timeout=180):
-                    logger.error("登录失败，无法继续采集")
-                    results['status'] = 'login_failed'
-                    return results
-
-            # 访问知虾
-            self.navigate_to(self.config['zhixia']['login_url'])
-            time.sleep(3)
-
+            # 登录成功后，浏览器已停留在工作台页面，无需额外导航
             # 关闭可能存在的弹窗
             self.close_popups()
 

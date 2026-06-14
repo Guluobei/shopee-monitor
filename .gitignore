@@ -1,0 +1,27 @@
+# 运行时生成的数据
+skills/shopee-scraper/data/downloads/
+skills/shopee-scraper/data/login_screenshots/
+skills/shopee-scraper/logs/
+
+# 敏感数据
+skills/shopee-scraper/data/cookies.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 测试输出
+test_output/
+*.png
+
+# IDE
+.vscode/
+.idea/
+
+# 临时文件
+*.tmp
+*.temp
+*.log
