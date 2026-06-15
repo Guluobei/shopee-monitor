@@ -1,0 +1,101 @@
+{
+  "test_prompts": [
+    {
+      "id": "test-001",
+      "category": "完整流程",
+      "prompt": "请帮我运行Shopee竞品监控：采集马来西亚和印尼站点的OP产品线数据，分析数据并生成报告",
+      "expected_output": {
+        "files": ["CSV报告", "分析摘要JSON"],
+        "sites": ["MY", "ID"],
+        "product_lines": ["OP"]
+      }
+    },
+    {
+      "id": "test-002",
+      "category": "仅采集",
+      "prompt": "采集Shopee马来西亚站点的云台产品数据",
+      "expected_output": {
+        "files": ["Excel文件"],
+        "sites": ["MY"],
+        "product_lines": ["OP"]
+      }
+    },
+    {
+      "id": "test-003",
+      "category": "仅分析",
+      "prompt": "分析已有的竞品数据，计算市场份额",
+      "expected_output": {
+        "files": ["CSV报告", "分析摘要JSON"],
+        "metrics": ["销量占比", "价格偏离度"]
+      }
+    },
+    {
+      "id": "test-004",
+      "category": "指定产品线",
+      "prompt": "采集所有站点的麦克风产品线数据",
+      "expected_output": {
+        "sites": ["MY", "ID", "TH", "PH", "SG", "VN"],
+        "product_lines": ["MIC_400_1000", "MIC_1000PLUS"]
+      }
+    },
+    {
+      "id": "test-005",
+      "category": "价格对比",
+      "prompt": "对比6国市场的云台产品价格分布",
+      "expected_output": {
+        "analysis": "价格分布对比",
+        "sites": ["MY", "ID", "TH", "PH", "SG", "VN"],
+        "product_lines": ["OP"]
+      }
+    },
+    {
+      "id": "test-006",
+      "category": "热销榜单",
+      "prompt": "生成东南亚市场热销商品Top10榜单",
+      "expected_output": {
+        "output": "Top10榜单",
+        "fields": ["商品名称", "销量", "价格", "站点"]
+      }
+    },
+    {
+      "id": "test-007",
+      "category": "飞书推送",
+      "prompt": "将今天的竞品分析报告发送到飞书",
+      "expected_output": {
+        "action": "飞书卡片发送",
+        "content": "分析摘要"
+      }
+    },
+    {
+      "id": "test-008",
+      "category": "状态查询",
+      "prompt": "查看Shopee竞品监控系统的状态",
+      "expected_output": {
+        "output": "状态JSON",
+        "fields": ["download_dir", "total_files", "today_files"]
+      }
+    }
+  ],
+  "validation_rules": [
+    {
+      "rule": "文件存在",
+      "check": "输出文件路径存在且非空"
+    },
+    {
+      "rule": "数据量",
+      "check": "CSV文件记录数 > 0"
+    },
+    {
+      "rule": "字段完整",
+      "check": "CSV包含必要字段：商品名称、价格、销量"
+    },
+    {
+      "rule": "站点匹配",
+      "check": "输出站点与请求站点一致"
+    },
+    {
+      "rule": "产品线匹配",
+      "check": "输出产品线与请求产品线一致"
+    }
+  ]
+}

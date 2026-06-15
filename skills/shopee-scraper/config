@@ -1,0 +1,92 @@
+# Shopee竞品监控配置
+
+# 监控的站点列表
+sites:
+  - code: MY
+    name: 马来西亚
+    url_suffix: ""
+  - code: ID
+    name: 印度尼西亚
+    url_suffix: ""
+  - code: TH
+    name: 泰国
+    url_suffix: ""
+  - code: PH
+    name: 菲律宾
+    url_suffix: ""
+  - code: SG
+    name: 新加坡
+    url_suffix: ""
+  - code: VN
+    name: 越南
+    url_suffix: ""
+
+# 产品线及对应关键词
+product_lines:
+  OP:
+    name: "手机云台/稳定器"
+    keywords:
+      - "insta360 luna ultra"
+    min_price: null
+    max_price: null
+
+  OM:
+    name: "手机支架/智能跟随"
+    keywords:
+      - "insta360 flow 2"
+      - "hohem"
+      - "zhiyun"
+    min_price: null
+    max_price: null
+
+  MIC_400_1000:
+    name: "麦克风 400-1000价位"
+    keywords:
+      - "hollyland mic"
+    min_price: 400
+    max_price: 1000
+
+  MIC_1000PLUS:
+    name: "麦克风 1000+价位"
+    keywords:
+      - "insta360 mic pro"
+      - "hollyland"
+      - "saramonic"
+      - "rode"
+    min_price: 1000
+    max_price: null
+
+# 知虾网站配置
+zhixia:
+  base_url: "https://shopee.menglar.com"
+  login_url: "https://shopee.menglar.com/workbench/home"
+  search_page: "/workbench/search/keyword-fuzzy-search"
+
+# 浏览器配置
+browser:
+  # headless模式：true=后台运行，false=可见浏览器
+  headless: true
+  # 下载目录
+  download_dir: "./data/downloads"
+  # 页面加载超时（毫秒）
+  page_timeout: 30000
+  # 搜索结果等待时间（毫秒）
+  search_wait: 5000
+
+# 导出配置
+export:
+  # 每页导出数量
+  page_size: 100
+  # 最大导出页数（0=全部）
+  max_pages: 0
+  # 是否下载全部数据
+  export_all: true
+
+# 数据输出配置
+output:
+  # CSV输出目录
+  csv_dir: "./output"
+  # 合并数据目录
+  consolidated_dir: "./output/consolidated"
+  # 文件名前缀
+  file_prefix: "shopee_competitor_data"

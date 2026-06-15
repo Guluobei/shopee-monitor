@@ -1,0 +1,104 @@
+# Shopee 竞品监控配置 v3
+# 监控站点列表
+sites:
+  - code: MY
+    name: 马来西亚
+    currency: MYR
+  - code: ID
+    name: 印尼
+    currency: IDR
+  - code: TH
+    name: 泰国
+    currency: THB
+  - code: PH
+    name: 菲律宾
+    currency: PHP
+  - code: SG
+    name: 新加坡
+    currency: SGD
+  - code: VN
+    name: 越南
+    currency: VND
+  - code: TW
+    name: 中国台湾
+    currency: TWD
+  - code: BR
+    name: 巴西
+    currency: BRL
+  - code: MX
+    name: 墨西哥
+    currency: MXN
+
+# 产品线及关键词配置
+product_lines:
+  # 手机云台/稳定器
+  OP:
+    name: "手机云台"
+    keywords:
+      - "insta360 flow"
+      - "insta360 flow 2"
+      - "hohem isteady"
+      - "zhiyun smooth"
+    min_price: null
+    max_price: null
+  
+  # 手机支架
+  OM:
+    name: "手机支架"
+    keywords:
+      - "phone stand"
+      - "smart follow"
+      - "auto tracking"
+    min_price: null
+    max_price: null
+  
+  # 麦克风 400-1000价位
+  MIC_400_1000:
+    name: "麦克风中端"
+    keywords:
+      - "wireless mic"
+      - "hollyland lark"
+    min_price: 400
+    max_price: 1000
+  
+  # 麦克风 1000+价位
+  MIC_1000PLUS:
+    name: "麦克风高端"
+    keywords:
+      - "hollyland lark max"
+      - "rode wireless"
+      - "saramonic"
+    min_price: 1000
+    max_price: null
+
+# 知虾平台配置
+zhixia:
+  base_url: "https://shopee.menglar.com"
+  login_url: "https://shopee.menglar.com/workbench/home"
+  search_page: "/workbench/search/keyword-fuzzy-search"
+
+# 浏览器配置
+browser:
+  headless: false
+  download_dir: "./data/downloads"
+  page_timeout: 30000
+  search_wait: 5000
+
+# 导出配置
+export:
+  page_size: 100
+  max_pages: 0
+  export_all: true
+  max_count: 500
+
+# 输出配置
+output:
+  csv_dir: "./output"
+  consolidated_dir: "./output/consolidated"
+  file_prefix: "shopee_data"
+
+# 飞书推送配置
+feishu:
+  webhook_url: ""
+  app_id: ""
+  app_secret: ""

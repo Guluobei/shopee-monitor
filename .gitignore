@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data files
+data/downloads/*.xlsx
+data/downloads/*.csv
+data/cookies.json
+data/screenshots/*.png
+
+# Output
+output/*.json
+output/*.csv
+output/*.xlsx
+output/consolidated/
+
+# Logs
+logs/*.json
+logs/*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.env
+secrets.yaml
+credentials.json
