@@ -1,0 +1,29 @@
+{
+  "task": "collect",
+  "start_time": "2026-06-14T10:12:45.451459",
+  "config": {
+    "sites": [
+      "MY"
+    ],
+    "product_lines": [
+      "OP"
+    ],
+    "keywords": "from_config",
+    "headless": true
+  },
+  "status": "completed",
+  "downloads": [],
+  "tasks": [
+    {
+      "site": "MY",
+      "product_line": "OP",
+      "keyword": "insta360 luna ultra",
+      "timestamp": "2026-06-14T10:13:02.697815",
+      "status": "failed",
+      "error": "Export failed"
+    }
+  ],
+  "total_exports": 0,
+  "errors": [],
+  "end_time": "2026-06-14T10:13:47.330878"
+}

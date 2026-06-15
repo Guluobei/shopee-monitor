@@ -1,0 +1,38 @@
+{
+  "task": "collect",
+  "start_time": "2026-06-14T10:10:34.434950",
+  "config": {
+    "sites": [
+      "MY"
+    ],
+    "product_lines": [
+      "OP"
+    ],
+    "keywords": "from_config",
+    "headless": true
+  },
+  "status": "completed",
+  "downloads": [],
+  "tasks": [
+    {
+      "site": "MY",
+      "product_line": "OP",
+      "keyword": "insta360 luna ultra",
+      "timestamp": "2026-06-14T10:11:06.727151",
+      "status": "error",
+      "error": "Page.wait_for_selector: Timeout 5000ms exceeded.\nCall log:\n  - waiting for locator(\"input[placeholder*=\\\"关键词\\\"], input[placeholder*=\\\"keyword\\\"]\") to be visible\n"
+    }
+  ],
+  "total_exports": 0,
+  "errors": [
+    {
+      "site": "MY",
+      "product_line": "OP",
+      "keyword": "insta360 luna ultra",
+      "timestamp": "2026-06-14T10:11:06.727151",
+      "status": "error",
+      "error": "Page.wait_for_selector: Timeout 5000ms exceeded.\nCall log:\n  - waiting for locator(\"input[placeholder*=\\\"关键词\\\"], input[placeholder*=\\\"keyword\\\"]\") to be visible\n"
+    }
+  ],
+  "end_time": "2026-06-14T10:11:23.482884"
+}

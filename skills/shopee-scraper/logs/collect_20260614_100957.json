@@ -1,0 +1,20 @@
+{
+  "task": "collect",
+  "start_time": "2026-06-14T10:09:24.159759",
+  "config": {
+    "sites": [
+      "MY"
+    ],
+    "product_lines": [
+      "OP"
+    ],
+    "keywords": "from_config",
+    "headless": true
+  },
+  "status": "completed",
+  "downloads": [],
+  "tasks": [],
+  "total_exports": 0,
+  "errors": [],
+  "error": "Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://shopee.menglar.com/workbench/home\", waiting until \"networkidle\"\n"
+}
