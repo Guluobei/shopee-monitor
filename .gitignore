@@ -40,6 +40,12 @@ Thumbs.db
 secrets.yaml
 credentials.json
 
+# Trae skill data (sensitive)
+.trae/skills/*/data/cookies.json
+.trae/skills/*/data/downloads/
+.trae/skills/*/logs/
+.trae/skills/*/.scrape_progress.json
+
 # Test output
 test_output/
 *.png
