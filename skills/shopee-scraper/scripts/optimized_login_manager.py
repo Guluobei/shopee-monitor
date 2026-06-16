@@ -13,6 +13,7 @@ import time
 import json
 import logging
 import tempfile
+from datetime import datetime
 from typing import Tuple, Optional, Dict, Any
 from pathlib import Path
 
@@ -305,7 +306,7 @@ class OptimizedLoginManager:
     
     def ensure_login(self, force: bool = False) -> Tuple[bool, str]:
         """
-        确保已登录 - 优化版
+        确保已登录 - 优化版（扫码登录）
         
         流程：
         1. 检查Session缓存（同一进程）
@@ -360,8 +361,74 @@ class OptimizedLoginManager:
                 except:
                     pass
         
-        # 4. 可视化手动登录
+        # 4. 可视化手动登录（扫码）
         return self._manual_login()
+    
+    def ensure_login_with_credentials(
+        self,
+        username: str,
+        password: str,
+        force: bool = False
+    ) -> Tuple[bool, str]:
+        """
+        确保已登录 - 账号密码版
+        
+        流程：
+        1. 检查Session缓存
+        2. 检查Cookie新鲜度
+        3. 快速验证Cookie（headless）
+        4. 失败则启动浏览器自动填写账号密码
+        
+        密码仅保存在内存中，登录成功后只持久化Cookie，不会将密码写入任何文件。
+        
+        Args:
+            username: 知虾账号（手机号/邮箱）
+            password: 知虾密码
+            force: 是否强制重新登录
+            
+        Returns:
+            (是否成功, 原因)
+        """
+        self._login_attempts += 1
+        
+        if self._login_attempts > self._max_attempts:
+            return False, f"超过最大尝试次数({self._max_attempts})"
+        
+        # 1. 检查Session缓存
+        if not force and self._is_session_valid():
+            if self._restore_from_session():
+                self._set_state(LoginState.LOGIN_SUCCESS, "session缓存有效")
+                return True, "session缓存有效"
+        
+        # 2. 检查Cookie新鲜度
+        if not force:
+            age, status = self.cookie_manager.get_cookie_age()
+            if age >= 0 and age < self.COOKIE_FRESH_THRESHOLD:
+                logger.info(f"Cookie新鲜 ({status}), 尝试快速验证...")
+        
+        # 3. 尝试快速验证
+        if not force:
+            success, reason = self._quick_validate()
+            if success:
+                self._set_state(LoginState.COOKIE_VALID, reason)
+                
+                if not self._launch_browser(headless=True):
+                    return False, "浏览器启动失败"
+                
+                self._load_cookies()
+                
+                try:
+                    self.page.goto(self.WORKBENCH_URL, wait_until='domcontentloaded', timeout=15*1000)
+                    time.sleep(2)
+                    
+                    if not self._is_on_login_page():
+                        self._save_to_session()
+                        return True, "快速验证成功"
+                except:
+                    pass
+        
+        # 4. 账号密码登录
+        return self._credential_login(username, password)
     
     def _quick_validate(self) -> Tuple[bool, str]:
         """
@@ -477,6 +544,274 @@ class OptimizedLoginManager:
         
         return False
     
+    def _credential_login(self, username: str, password: str) -> Tuple[bool, str]:
+        """
+        账号密码自动登录
+        
+        启动可视化浏览器，自动填写账号密码并登录。
+        密码仅用于本次登录流程，不写入任何持久化存储。
+        
+        Args:
+            username: 知虾账号
+            password: 知虾密码
+            
+        Returns:
+            (是否成功, 原因)
+        """
+        self._set_state(LoginState.NEED_MANUAL_LOGIN)
+        
+        # 启动可视化浏览器
+        if not self._launch_browser(headless=False):
+            return False, "浏览器启动失败"
+        
+        # 加载已有的 Cookie
+        cookies = self._load_cookies()
+        if cookies:
+            try:
+                self.context.add_cookies(cookies)
+            except Exception as e:
+                logger.warning(f"加载Cookie失败: {e}")
+        
+        # 访问登录页
+        try:
+            self.page.goto(self.WORKBENCH_URL, wait_until='domcontentloaded', timeout=self.PAGE_LOAD_TIMEOUT*1000)
+            time.sleep(3)
+        except Exception as e:
+            logger.warning(f"页面加载失败: {e}")
+        
+        # 检查是否已有有效 Cookie
+        if not self._is_on_login_page():
+            self._set_state(LoginState.LOGIN_SUCCESS, "Cookie仍然有效")
+            self._save_to_session()
+            self._save_cookies()
+            return True, "Cookie仍然有效"
+        
+        # === 账号密码登录流程 ===
+        self._set_state(LoginState.LOGGING_IN)
+        logger.info("=" * 60)
+        logger.info("正在使用账号密码登录知虾...")
+        logger.info("=" * 60)
+        
+        self._take_screenshot('login_page')
+        
+        # 查找用户名输入框
+        username_selectors = [
+            'input[type="text"][placeholder*="手机"]',
+            'input[type="text"][placeholder*="账号"]',
+            'input[type="text"][placeholder*="邮箱"]',
+            'input[placeholder*="手机号"]',
+            'input[placeholder*="用户名"]',
+            'input[placeholder*="账号"]',
+            'input[name="username"]',
+            'input[name="phone"]',
+            'input[name="account"]',
+            'input[name="mobile"]',
+            'input[type="text"]',
+            'input:not([type="password"]):not([type="submit"]):not([type="button"])',
+        ]
+        
+        username_input = None
+        for selector in username_selectors:
+            try:
+                el = self.page.wait_for_selector(selector, timeout=3000)
+                if el and el.is_visible():
+                    username_input = el
+                    logger.info(f"找到用户名输入框: {selector}")
+                    break
+            except:
+                continue
+        
+        if not username_input:
+            logger.error("无法找到用户名输入框，尝试通过手动登录")
+            self._take_screenshot('username_not_found')
+            return self._fallback_manual_login()
+        
+        # 填写用户名
+        try:
+            username_input.click()
+            time.sleep(0.3)
+            username_input.fill('')
+            time.sleep(0.2)
+            for char in username:
+                username_input.type(char, delay=50)
+                time.sleep(0.01)
+            logger.info("用户名已填写")
+        except Exception as e:
+            logger.warning(f"填写用户名失败: {e}")
+        
+        # 查找密码输入框
+        password_selectors = [
+            'input[type="password"]',
+            'input[placeholder*="密码"]',
+            'input[name="password"]',
+            'input[name="passwd"]',
+        ]
+        
+        password_input = None
+        for selector in password_selectors:
+            try:
+                el = self.page.wait_for_selector(selector, timeout=3000)
+                if el and el.is_visible():
+                    password_input = el
+                    logger.info(f"找到密码输入框: {selector}")
+                    break
+            except:
+                continue
+        
+        if not password_input:
+            logger.error("无法找到密码输入框")
+            self._take_screenshot('password_not_found')
+            return self._fallback_manual_login()
+        
+        # 填写密码
+        try:
+            password_input.click()
+            time.sleep(0.3)
+            password_input.fill('')
+            time.sleep(0.2)
+            for char in password:
+                password_input.type(char, delay=80)
+                time.sleep(0.01)
+            logger.info("密码已填写")
+        except Exception as e:
+            logger.warning(f"填写密码失败: {e}")
+        
+        self._take_screenshot('filled_credentials')
+        
+        # 查找并点击登录按钮
+        login_btn_selectors = [
+            'button:has-text("登录")',
+            'button:has-text("登 录")',
+            'button:has-text("立即登录")',
+            'button[type="submit"]',
+            'input[type="submit"][value*="登录"]',
+            'button.login-btn',
+            'button.btn-login',
+            '.login-btn',
+            '.btn-login',
+        ]
+        
+        login_btn = None
+        for selector in login_btn_selectors:
+            try:
+                btn = self.page.wait_for_selector(selector, timeout=3000)
+                if btn and btn.is_visible() and btn.is_enabled():
+                    login_btn = btn
+                    logger.info(f"找到登录按钮: {selector}")
+                    break
+            except:
+                continue
+        
+        if not login_btn:
+            logger.error("无法找到登录按钮")
+            self._take_screenshot('login_btn_not_found')
+            return self._fallback_manual_login()
+        
+        # 点击登录
+        try:
+            login_btn.click()
+            logger.info("已点击登录按钮")
+        except Exception as e:
+            logger.warning(f"点击登录按钮失败: {e}")
+            try:
+                self.page.evaluate('(btn) => btn.click()', login_btn)
+                logger.info("JS方式点击登录按钮")
+            except Exception as e2:
+                logger.error(f"JS点击也失败: {e2}")
+                return self._fallback_manual_login()
+        
+        time.sleep(2)
+        
+        # 检查是否需要处理验证码
+        captcha_detected = self._detect_captcha()
+        
+        if captcha_detected:
+            logger.info("检测到验证码，等待用户手动完成...")
+            self._take_screenshot('captcha_detected')
+            logger.info("=" * 60)
+            logger.info("检测到验证码！请在浏览器中手动完成验证...")
+            logger.info(f"等待超时: {self.MANUAL_LOGIN_TIMEOUT}秒")
+            logger.info("=" * 60)
+        
+        # 等待登录完成
+        success = self._wait_for_login()
+        
+        if success:
+            self._set_state(LoginState.LOGIN_SUCCESS)
+            self._save_cookies()
+            self._save_to_session()
+            self._take_screenshot('login_success')
+            return True, "账号密码登录成功"
+        else:
+            self._set_state(LoginState.LOGIN_FAILED)
+            self._take_screenshot('login_failed')
+            return False, "登录超时"
+    
+    def _detect_captcha(self) -> bool:
+        """
+        检测页面是否出现验证码
+        
+        Returns:
+            True 如果检测到验证码
+        """
+        if not self.page:
+            return False
+        
+        captcha_indicators = [
+            '验证码',
+            'captcha',
+            '滑块',
+            '拖动',
+            '拼图',
+            '请完成安全验证',
+            '请点击',
+            '图形验证',
+            '短信验证',
+            '请按顺序点击',
+        ]
+        
+        try:
+            page_text = self.page.inner_text('body')
+            for indicator in captcha_indicators:
+                if indicator in page_text:
+                    return True
+            
+            # 检查验证码图片
+            captcha_imgs = self.page.query_selector_all(
+                'img[src*="captcha"], img[src*="verify"], img[id*="captcha"], '
+                '[class*="captcha"], [class*="verify-img"]'
+            )
+            if captcha_imgs and any(img.is_visible() for img in captcha_imgs):
+                return True
+            
+        except Exception:
+            pass
+        
+        return False
+    
+    def _fallback_manual_login(self) -> Tuple[bool, str]:
+        """
+        降级为手动扫码登录
+        
+        当自动填写表单失败时的降级方案
+        """
+        logger.info("降级为手动扫码登录...")
+        logger.info("=" * 60)
+        logger.info("自动填写失败，请在浏览器中完成登录（扫码或手动填写）...")
+        logger.info(f"超时时间: {self.MANUAL_LOGIN_TIMEOUT}秒")
+        logger.info("=" * 60)
+        
+        success = self._wait_for_login()
+        
+        if success:
+            self._set_state(LoginState.LOGIN_SUCCESS)
+            self._save_cookies()
+            self._save_to_session()
+            return True, "手动登录成功（降级方案）"
+        else:
+            self._set_state(LoginState.LOGIN_FAILED)
+            return False, "手动登录超时（降级方案）"
+    
     # ==================== 便捷方法 ====================
     
     def get_page(self):
@@ -520,5 +855,3 @@ class OptimizedLoginManager:
         }
 
 
-# 需要datetime
-from datetime import datetime
