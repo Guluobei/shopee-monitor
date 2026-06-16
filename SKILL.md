@@ -10,6 +10,8 @@ triggers:
   - "运行Shopee竞品监控"
   - "采集Shopee数据并分析"
   - "东南亚电商竞品情报"
+  - "快速采集竞品"
+  - "优化版采集"
 dependencies:
   skills:
     - shopee-scraper
@@ -20,6 +22,38 @@ dependencies:
 # Shopee竞品情报套件
 
 > 一句话钩子：**一键采集东南亚6国竞品数据，自动生成分析报告，省去每天手动查价的痛苦**
+
+## 🚀 新增优化模式
+
+**v4.0 新增优化模式**，在流畅度和可靠性上有大幅提升：
+
+| 特性 | 传统模式 | 优化模式 |
+|------|----------|----------|
+| **Cookie管理** | 每次检测 | 30分钟缓存 |
+| **登录速度** | 较慢 | 快速跳过 |
+| **选择器** | 固定，易失效 | 自适应+缓存 |
+| **失败处理** | 直接报错 | 多级重试 |
+| **断点续传** | 无 | 有 |
+
+### 优化模式使用方法
+
+```powershell
+# 采集数据（推荐使用优化模式）
+请帮我运行Shopee竞品监控（使用优化模式）
+
+# 或直接使用命令
+python skills/shopee-scraper/scripts/zhixia_monitor.py run --sites MY ID
+```
+
+### 优化模式核心优势
+
+- **30分钟Cookie缓存**：30分钟内不重复登录
+- **快速验证**：10秒检测Cookie有效性
+- **自适应选择器**：页面改版自动降级
+- **选择器缓存**：记住成功的，第二次直接用
+- **智能等待**：根据历史自动调整等待时间
+- **多级重试**：偶发错误自动恢复
+- **断点续传**：中断后可继续
 
 ## 你什么时候需要它？
 
@@ -65,6 +99,19 @@ playwright install chromium
                           → report-generator → HTML报告/飞书卡片
 ```
 
+### 优化模式工作流
+
+```
+用户指令 → 解析参数 → OptimizedZhixiaScraper → 生成报告
+    │           │           │                  │
+    │           │           │                  │
+    ▼           ▼           ▼                  ▼
+"采集马来西亚  → 站点:MY    → 30分钟Cookie缓存   → CSV文件
+ OP产品线"     产品线:OP      自适应选择器        断点续传
+                    ↓
+              智能等待+多级重试
+```
+
 ## 子Skill说明
 
 | 子Skill | 职责 | 可独立使用 |
@@ -73,21 +120,29 @@ playwright install chromium
 | `competitor-analysis` | 分析数据，计算市场份额、价格分布 | ✓ |
 | `report-generator` | 生成HTML报告，推送飞书 | ✓ |
 
+### shopee-scraper 模式
+
+| 模式 | 说明 | 使用场景 |
+|------|------|----------|
+| **优化模式** | 新增，流畅度高 | 日常监控、页面改版、大批量 |
+| **CDP模式** | 传统，复用Chrome | 稳定性要求高 |
+| **Playwright模式** | 传统，独立浏览器 | 无Chrome环境 |
+
 ## 示例用法
 
-### 完整流程
+### 完整流程（优化模式）
 
 ```
-请帮我运行Shopee竞品监控：
+请帮我运行Shopee竞品监控（使用优化模式）：
 1. 采集马来西亚和印尼站点的OP产品线数据
 2. 分析数据并生成报告
 3. 将报告发送到飞书
 ```
 
-### 仅采集
+### 仅采集（优化模式）
 
 ```
-采集Shopee马来西亚站点的云台产品数据
+采集Shopee马来西亚站点的云台产品数据（优化模式）
 ```
 
 ### 仅分析
@@ -115,17 +170,27 @@ shopee-competitor-suite/
 │   ├── market-insights.md      # 市场洞察
 │   ├── product-lines.md        # 产品线定义
 │   └ competitor-metrics.md     # 指标定义
-├── tools/
-│   └ check-suite.ps1           # 套件检查
-├── assets/
-│   └ workflow-diagram.png      # 工作流图
-├── examples/
-│   └ test-prompts.json         # 测试prompt
-│   └ sample-data/              # 样例数据
 ├── skills/
-│   ├── shopee-scraper/         # 子Skill 1
-│   ├── competitor-analysis/    # 子Skill 2
-│   └ report-generator/         # 子Skill 3
+│   ├── shopee-scraper/        # 数据采集（新增优化版）
+│   │   ├── SKILL.md          # Skill文档
+│   │   ├── scripts/
+│   │   │   ├── zhixia_monitor.py    # 优化版主程序
+│   │   │   ├── optimized_scraper.py  # 优化版采集器
+│   │   │   ├── optimized_login_manager.py # 登录管理
+│   │   │   ├── optimized_cookie_manager.py # Cookie管理
+│   │   │   ├── adaptive_selector.py  # 自适应选择器
+│   │   │   ├── smart_wait.py         # 智能等待
+│   │   │   ├── data_processor.py     # 数据处理
+│   │   │   ├── zhixia_scraper.py     # Playwright采集器
+│   │   │   ├── zhixia_cdp_scraper.py # CDP采集器
+│   │   │   ├── zhixia_login.py       # 登录管理
+│   │   │   └── run_daily.py          # 传统模式入口
+│   │   └── config/
+│   │       └── competitors.yaml
+│   ├── competitor-analysis/    # 数据分析
+│   └── report-generator/       # 报告生成
+└── docs/
+    └── ...
 ```
 
 ## 支持的市场
@@ -138,6 +203,9 @@ shopee-competitor-suite/
 | PH | 菲律宾 | shopee.ph |
 | SG | 新加坡 | shopee.sg |
 | VN | 越南 | shopee.vn |
+| TW | 中国台湾 | shopee.tw |
+| BR | 巴西 | shopee.com.br |
+| MX | 墨西哥 | shopee.com.mx |
 
 ## 预置产品线
 
@@ -163,3 +231,17 @@ shopee-competitor-suite/
 | 导出按钮找不到 | 页面结构可能更新，需更新选择器 |
 | 数据为空 | 确认关键词在目标市场有搜索结果 |
 | 验证码弹窗 | 脚本会尝试关闭，如失败需手动处理 |
+| 选择器失效（优化模式） | 运行 `python scripts/zhixia_monitor.py cache` 清除缓存 |
+
+## 版本历史
+
+- **v4.0 (2026-06)** - 新增优化模式，大幅提升流畅度和可靠性
+  - 30分钟Cookie缓存
+  - 自适应选择器 + 选择器缓存
+  - 智能等待 + 多级重试
+  - 断点续传
+- v3.2 (2026-06) - 批次导出、断点续传、下载监控
+- v3.1 (2025-06) - 添加CDP模式
+- v3.0 (2025-06) - 重构采集流程
+- v2.0 (2024-01) - 添加数据处理和飞书推送
+- v1.0 (2024-01) - 初始版本

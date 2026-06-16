@@ -1,33 +1,156 @@
 ---
 name: shopee-scraper
-description: Shopee竞品数据采集：从知虾平台采集东南亚竞品价格和销量数据
+description: Shopee竞品数据采集：从知虾平台采集东南亚竞品价格和销量数据，支持传统模式和优化模式
 triggers:
   - "采集Shopee数据"
   - "抓取马来西亚云台产品"
   - "导出OP产品线数据"
   - "运行知虾采集"
   - "采集东南亚竞品"
+  - "快速采集竞品"
+  - "优化版采集"
 standalone: true
 ---
 
 # Shopee竞品数据采集
 
-> 从知虾平台自动化采集东南亚Shopee竞品数据
+> 从知虾平台自动化采集东南亚Shopee竞品数据，支持**传统模式**和**优化模式**
 
-## 功能特性
+## 🚀 两种模式对比
 
-- **多站点支持**：马来西亚、印尼、泰国、菲律宾、新加坡、越南、台湾、巴西、墨西哥
-- **多产品线**：OP（云台）、OM（支架）、MIC（麦克风）等
-- **两种采集模式**：
-  - **CDP 模式**：复用 Chrome 浏览器登录状态，无需独立浏览器
-  - **Playwright 模式**：独立启动浏览器，支持无头模式
-- **批次导出**：自动分批导出超过100条的数据（知虾平台限制每批100条）
-- **断点续传**：支持进度保存，中断后可继续未完成的批次
-- **下载监控**：自动等待下载完成并检测新文件
-- **输入优化**：使用 JS 设置值并触发 input 事件，避免值累积问题
-- **数据处理**：自动解析、合并、去重数据
+| 特性 | 传统模式 | 优化模式 |
+|------|----------|----------|
+| **Cookie管理** | 每次检测 | 30分钟缓存 |
+| **登录速度** | 较慢 | 快速跳过 |
+| **选择器** | 固定，易失效 | 自适应+缓存 |
+| **等待时间** | 固定 | 智能调整 |
+| **失败处理** | 直接报错 | 多级重试 |
+| **断点续传** | 无 | 有 |
+| **页面改版** | 易失败 | 自动降级 |
 
-## 支持的市场
+## ⚡ 优化模式（推荐）
+
+优化模式在**流畅度**和**可靠性**上有大幅提升：
+
+### 核心优势
+- **30分钟Cookie缓存**：30分钟内不重复登录
+- **快速验证**：10秒检测Cookie有效性
+- **Session复用**：同一进程内不重复启动浏览器
+- **自适应选择器**：页面改版自动降级
+- **选择器缓存**：记住成功的，第二次直接用
+- **智能等待**：根据历史自动调整等待时间
+- **多级重试**：偶发错误自动恢复
+- **断点续传**：中断后可继续
+
+### 使用方法
+
+```powershell
+# 登录检查
+python scripts/zhixia_monitor.py login
+
+# 采集数据
+python scripts/zhixia_monitor.py collect --sites MY ID
+
+# 完整流程
+python scripts/zhixia_monitor.py run --sites MY --product-lines OP
+
+# 清除缓存（如页面改版）
+python scripts/zhixia_monitor.py cache
+
+# 查看状态
+python scripts/zhixia_monitor.py status
+```
+
+### Python API
+
+```python
+from scripts.optimized_scraper import OptimizedZhixiaScraper
+
+# 创建采集器
+scraper = OptimizedZhixiaScraper(config_path='config/competitors.yaml')
+
+# 初始化（登录）
+success, reason = scraper.initialize()
+if not success:
+    print(f"登录失败: {reason}")
+    exit(1)
+
+# 批量采集（支持断点续传）
+results = scraper.scrape_multiple(
+    sites=['MY', 'ID'],
+    keywords=['insta360', '手机云台'],
+    resume=True
+)
+
+print(f"成功: {results['completed']}, 失败: {results['failed']}")
+
+# 关闭
+scraper.close()
+```
+
+## 📦 传统模式
+
+传统模式经过多年验证，稳定可靠：
+
+```powershell
+# CDP 模式（推荐）
+python run_daily.py cdp --sites MY ID --product-lines OP OM
+
+# Playwright 模式
+python run_daily.py pw --sites MY
+```
+
+详细说明请参考下方文档。
+
+## 📁 文件结构
+
+```
+skills/shopee-scraper/
+├── SKILL.md                        # 本文件
+├── README.md                       # 详细说明
+├── config/
+│   └── competitors.yaml            # 配置文件
+├── scripts/
+│   ├── __init__.py               # 优化版模块入口
+│   ├── zhixia_monitor.py         # 优化版主程序
+│   ├── optimized_scraper.py       # 优化版采集器
+│   ├── optimized_login_manager.py # 优化版登录管理
+│   ├── optimized_cookie_manager.py # Cookie管理
+│   ├── adaptive_selector.py       # 自适应选择器
+│   ├── smart_wait.py             # 智能等待
+│   ├── data_processor.py         # 数据处理
+│   ├── run_daily.py             # 传统模式入口
+│   ├── zhixia_cdp_scraper.py   # CDP采集器
+│   ├── zhixia_scraper.py        # Playwright采集器
+│   └── zhixia_login.py          # 登录管理
+└── data/
+    ├── downloads/                # 下载文件
+    ├── cookies.json             # Cookie
+    ├── cache/                   # 缓存目录
+    └── screenshots/             # 截图
+```
+
+## 🔧 模块说明
+
+### 优化版模块
+
+| 模块 | 功能 |
+|------|------|
+| `optimized_cookie_manager.py` | Cookie新鲜度检测、快速验证 |
+| `optimized_login_manager.py` | 优化版登录管理 |
+| `adaptive_selector.py` | 自适应选择器 |
+| `smart_wait.py` | 智能等待 |
+| `optimized_scraper.py` | 优化版采集器 |
+
+### 传统模块
+
+| 模块 | 功能 |
+|------|------|
+| `zhixia_login.py` | 登录管理 |
+| `zhixia_scraper.py` | Playwright采集器 |
+| `zhixia_cdp_scraper.py` | CDP采集器 |
+
+## 📊 支持的市场
 
 | 代码 | 国家/地区 | 货币 |
 |------|-----------|------|
@@ -41,54 +164,7 @@ standalone: true
 | BR | 巴西 | BRL |
 | MX | 墨西哥 | MXN |
 
-## 使用方法
-
-### CDP 模式（推荐）
-
-复用 Chrome 浏览器登录状态，无需独立启动浏览器：
-
-```powershell
-# 检查 CDP Proxy 状态
-python run_daily.py check
-
-# 测试模式（单站点单关键词）
-python run_daily.py test
-
-# 自定义采集
-python run_daily.py cdp --sites MY ID --product-lines OP OM
-
-# 完整采集（所有站点所有产品线）
-python run_daily.py cdp
-```
-
-**前置条件**：
-1. Chrome 浏览器已开启远程调试（`chrome://inspect/#remote-debugging`）
-2. 已在 Chrome 中登录知虾网站
-3. CDP Proxy 已启动（运行 `check` 命令检查）
-
-### Playwright 模式
-
-独立启动浏览器，适合首次登录或无头模式：
-
-```powershell
-# 可见模式（便于登录）
-python run_daily.py pw --sites MY
-
-# 无头模式（后台运行）
-python run_daily.py pw --sites MY --headless
-```
-
-### Agent调用
-
-```
-使用 CDP 模式采集Shopee马来西亚站点的云台产品数据
-```
-
-```
-采集马来西亚和印尼的OP、OM产品线数据
-```
-
-## 配置说明
+## ⚙️ 配置说明
 
 配置文件位于 `config/competitors.yaml`：
 
@@ -104,84 +180,53 @@ product_lines:
     keywords:
       - "insta360 flow"
       - "insta360 flow 2"
-      - "hohem isteady"
-      - "zhiyun smooth"
 ```
 
-## 文件结构
+## 💾 缓存文件
 
-```
-shopee-competitor-suite/
-├── config/
-│   └── competitors.yaml        # 配置文件
-├── skills/shopee-scraper/
-│   ├── SKILL.md               # Skill文档
-│   └── scripts/
-│       ├── run_daily.py       # 统一入口
-│       ├── zhixia_cdp_scraper.py  # CDP采集器（推荐）
-│       ├── zhixia_scraper.py  # Playwright采集器
-│       ├── zhixia_login.py    # 登录管理
-│       └── data_processor.py  # 数据处理
-│   ├── data/
-│   │   ├── downloads/         # 下载的Excel
-│   │   ├── cookies.json       # 登录状态
-│   │   └── screenshots/       # 截图
-│   └── output/
-│       ├── *.csv              # 输出CSV
-│       └── consolidated/      # 合并数据
-```
+优化版会生成以下缓存文件：
 
-## 输出格式
+- `.cache/selector_cache_*.json` - 选择器缓存
+- `.cache/wait_history.json` - 等待历史
+- `.cache/checkpoint_*.json` - 断点记录
+- `.cookie_validation_cache.json` - Cookie验证缓存
 
-| 列名 | 说明 |
-|------|------|
-| 采集日期 | 数据采集日期 |
-| 采集站点 | 如"马来西亚" |
-| 产品线 | 如"手机云台" |
-| 商品名称 | 商品标题 |
-| 店铺名称 | 店铺名称 |
-| 价格 | 当前售价 |
-| 销量 | 累计销量 |
-| 评分 | 商品评分 |
-| 商品链接 | 详情页URL |
+如遇页面改版导致失败，可运行 `cache` 命令清除缓存。
 
-## 依赖安装
+## ❓ 如何选择
 
-```bash
-pip install playwright pandas pyyaml openpyxl requests
-playwright install chromium  # 仅 Playwright 模式需要
-```
-
-## CDP 模式设置
-
-1. 打开 Chrome 浏览器
-2. 访问 `chrome://inspect/#remote-debugging`
-3. 勾选 **Allow remote debugging for this browser instance**
-4. 登录知虾网站 `https://shopee.menglar.com`
-5. 运行 `python run_daily.py check` 确认连接
-
-## 注意事项
-
-1. **CDP 模式**：需要先在 Chrome 中登录知虾，之后自动复用登录状态
-2. **Playwright 模式**：首次运行需扫码登录，之后自动复用 cookies
-3. **验证码**：脚本会自动尝试关闭验证码弹窗
-4. **反爬限制**：建议设置合理的采集间隔
-5. **数据量**：根据账号等级，单次导出可能有数量限制
+| 场景 | 推荐模式 |
+|------|----------|
+| 日常监控（定期运行） | 优化模式 |
+| 页面经常改版的网站 | 优化模式 |
+| 追求稳定性 | 传统模式 |
+| 首次使用 | 优化模式 |
+| 大批量采集 | 优化模式 |
 
 ## 故障排查
 
 | 问题 | 解决方案 |
 |------|----------|
-| CDP Proxy 未就绪 | 检查 Chrome 远程调试是否开启 |
-| 登录失败 | 在 Chrome 中手动登录知虾网站 |
-| 导出失败 | 检查页面选择器是否更新 |
-| 数据为空 | 确认关键词有搜索结果 |
+| 登录失败 | 删除 `data/cookies.json` 后重新登录 |
+| 选择器失效（优化模式） | 运行 `cache` 命令清除选择器缓存 |
+| 采集失败 | 检查网络连接，确保知虾账号有效 |
 | 下载失败 | 检查下载目录权限 |
+| CDP未就绪 | 检查 Chrome 远程调试是否开启 |
+
+## 📖 详细文档
+
+- [详细使用说明](./README.md)
+- [定时任务配置](./cron_config.md)
 
 ## 版本历史
 
+- **v4.0 (2026-06)** - 新增优化模式，大幅提升流畅度和可靠性
+  - 30分钟Cookie缓存
+  - 自适应选择器 + 选择器缓存
+  - 智能等待 + 多级重试
+  - 断点续传
 - v3.2 (2026-06) - 批次导出、断点续传、下载监控、输入优化
-- v3.1 (2025-06) - 添加 CDP 模式，复用 Chrome 登录状态
-- v3.0 (2025-06) - 重构采集流程，优化登录管理
-- v2.0 (2024-01) - 添加数据处理和飞书推送
+- v3.1 (2025-06) - 添加 CDP 模式
+- v3.0 (2025-06) - 重构采集流程
+- v2.0 (2024-01) - 添加数据处理
 - v1.0 (2024-01) - 初始版本
